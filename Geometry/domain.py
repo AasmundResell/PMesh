@@ -1,5 +1,5 @@
 
-from Domain.projectile import ProjectileModel
+from Geometry.projectile import ProjectileModel
 
 import GEOM
 from salome.geom import geomBuilder

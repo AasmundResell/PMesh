@@ -1,7 +1,7 @@
 
 from salome.shaper import model
 
-from Domain.body import ConicNose, TangenOgiveNose, HorizontalSection, LinearTransitionSection 
+from Geometry.body import ConicNose, TangenOgiveNose, HorizontalSection, LinearTransitionSection 
 
 class ProjectileModel:
     def __init__(self,name):
