@@ -7,6 +7,7 @@ from Mesh.SU2msh import ExportSU2File
 import sys
 import salome
 import os 
+import yaml
 
 def salomeInit(salomeRun = True):
         
@@ -31,55 +32,23 @@ if __name__ == "__main__":
     else:
         notebook = salomeInit()
         
-    #name = input("Please enter model name: ")
-
-    name = "test_mesh"
     
-    #M910 Bullet
-    params =  {
-        "noseParams" : 
-            {
-                "bodyType": "ConicNose",
-                "bodyLength": 41.2,
-                "bodyRadius": 16.2/2,
-                "bodyRadiusFront": 2.2/2,
-            },
-        "bodyParams" : 
-            {
-            1 : {
-                "bodyType": "HorizontalSection",
-                "bodyLength": 73.9-41.2,
-                "bodyRadius": 16.2/2,
-                },
-            2 : { 
-                "bodyType": "LinearTransitionSection",
-                "bodyLength": 0.2,
-                "bodyRadius": 30,
-                "bodyRadiusFront": 50,
-                },
-            },
-        "finParams":
-            {
-                "finType": "SquareFins",
-                "axialStartPosition": 100,
-                "radialBasePosition": 20,
-                "thickness" : 2,
-                "baseLength" : 20,
-                "baseHeight" : 10,
-            },
-        "domainParams":
-        {
-            "lengthFront": 200,
-            "lengthBack": 200,
-            "radius": 200,
-        }    
-    }
+    ymlFile = open("Configurations/M910_bullet.yml") 
+    
+    parsedValues = yaml.load(ymlFile, Loader=yaml.FullLoader)
+    SystemSettings = parsedValues['system']
+    GeometryParams = parsedValues['geometry']
+    MeshParams = parsedValues['mesh']
+    
+    name = SystemSettings['name']
 
-    geomDomain = DomainGenerator(name)
+    
 
-    geomDomain.makeGeometry(params)
+    geomDomain = DomainGenerator(**GeometryParams)
 
-    mesher = MeshGenerator()
+    geomDomain.makeGeometry()
+
+    mesher = MeshGenerator(name,**MeshParams)
 
     Mesh = mesher.generateMesh(geomDomain)
 

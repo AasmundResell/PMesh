@@ -1,0 +1,36 @@
+system:
+  name: M910_bullet
+
+
+geometry:
+  projectile:
+    noseParams : #Types of noses: ConicNose, TangentOgiveNose
+      bodyType: ConicNose
+      bodyLength: 41.2
+      bodyRadius: 8.1
+      bodyRadiusFront: 1.1
+    bodyParams : 
+      section_1:        
+        bodyType: HorizontalSection
+        bodyLength: 32.7
+        bodyRadius: 8.1
+      section_2:
+        bodyType: LinearTransitionSection
+        bodyLength: 0.2
+        bodyRadius: 7.9
+        bodyRadiusFront: 8.1
+    finParams:
+      finType: SquareFins
+      axialStartPosition: 100
+      radialBasePosition: 20
+      thickness : 2
+      baseLength : 20
+      baseHeight : 10
+  domain:  
+    domain_method: manual #manual or automatic, automatic calculate domain size based on projectile size (and mach number eventually)
+    lengthFront: 200
+    lengthBack: 200
+    radius: 200
+
+mesh:
+  inflationxLayers: True

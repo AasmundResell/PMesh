@@ -11,13 +11,33 @@ from salome.shaper import model
 
 
 class DomainGenerator:
-    def __init__(self,name):
+    def __init__(self,**kwargs):
 
-        self.projectile = ProjectileModel(name) 
-    
-        self.FrontDomainLength = 200
-        self.BackDomainLength = 200
-        self.domainRadius = 200
+
+        self.projectileParams = kwargs.get("projectile")
+        self.projectile = ProjectileModel() 
+        
+        domainParams = kwargs.get("domain")
+
+        if domainParams.get("domain_method") == "manual":
+            self.readDomain(**domainParams)
+        elif domainParams.get("domain_method") == "automatic":
+            self.calculateDomain()
+        else:
+          raise AssertionError("Method to specify the domain must be defined.")
+
+    def readDomain(self,**kwargs):
+        
+        self.FrontDomainLength = kwargs.get("lengthFront")
+        self.BackDomainLength = kwargs.get("lengthBack")
+        self.domainRadius = kwargs.get('radius')
+
+    def caculateDomain(self):
+        """
+        Function that calculates the size of the domain based on the size of the projectile
+        and the specified mach number.
+        """
+        print("TEMP")
 
     def importProjectileFromShaper(self):
         
@@ -35,7 +55,7 @@ class DomainGenerator:
             for j in range(len(section.faceID)):
                 
                 ### Create Export
-                export = model.exportToXAO(self.projectile.part_doc, '/tmp/shaper_{}.xao'.format(section.faceID[j]), model.selection("FACE", "Revolution_{0}_{1}".format(i+1,j+1)), 'XAO')
+                model.exportToXAO(self.projectile.part_doc, '/tmp/shaper_{}.xao'.format(section.faceID[j]), model.selection("FACE", "Revolution_{0}_{1}".format(i+1,j+1)), 'XAO')
                 
                 if j == 0:
                     revoluteSection.append(SHAPERSTUDY.shape(model.featureStringId(self.projectile.revolutions[i])))
@@ -59,9 +79,9 @@ class DomainGenerator:
                 revolutions_section.append(revolution)
             self.revolutionFacesGeom.append(revolutions_section)
 
-    def makeGeometry(self,params):
+    def makeGeometry(self):
         
-        self.projectile.generateProjectile(**params) 
+        self.projectile.generateProjectile(**self.projectileParams) 
 
         
         self.geompy = geomBuilder.New()
@@ -104,7 +124,6 @@ class DomainGenerator:
         self.geompy.addToStudy( startCylindeVertex, 'VertexCylinder' )
         cylinderID = self.geompy.addToStudy( cylinderDomain, 'Cylinder' )
         self.geompy.addToStudy( self.domain, 'Domain' )
-        print("Cylinder id: ",cylinderID)
 
         Farfield = self.geompy.CreateGroup(self.domain, self.geompy.ShapeType["FACE"])
         self.geompy.UnionIDs(Farfield, [3, 10, 12])
@@ -122,8 +141,6 @@ class DomainGenerator:
         
         self.domainIDs = faceIDs[0:self.domainFaces]
         self.projectileIDs = faceIDs[self.domainFaces:]
-        print("Domain IDs: ",self.domainIDs)
-        print("Projectile IDs: ",self.projectileIDs)
-
+       
 
         

@@ -4,9 +4,8 @@ from salome.shaper import model
 from Geometry.body import ConicNose, TangenOgiveNose, HorizontalSection, LinearTransitionSection 
 
 class ProjectileModel:
-    def __init__(self,name):
-        self.modelName = name
-
+    def __init__(self):
+    
         model.begin()
 
         self.partSet = model.moduleDocument()
@@ -73,10 +72,11 @@ class ProjectileModel:
         currentAxialLength = self.sections[0].baseLength #Begin after the nose
 
         for i in range(1,len(bodyParamList)+1):
-            if bodyParamList[i]["bodyType"] == "HorizontalSection":
-                body = HorizontalSection(bodyParamList[i],i)
-            elif bodyParamList[i]["bodyType"] == "LinearTransitionSection":
-                body = LinearTransitionSection(bodyParamList[i],i)
+            sectionParams = bodyParamList["section_{}".format(i)]
+            if sectionParams["bodyType"] == "HorizontalSection":
+                body = HorizontalSection(sectionParams,i)
+            elif sectionParams["bodyType"] == "LinearTransitionSection":
+                body = LinearTransitionSection(sectionParams,i)
             else:
                 raise AssertionError("Invalid body type specified")
                 
@@ -97,8 +97,6 @@ class ProjectileModel:
         """
         Connects the coincident points between each section
         """
-
-        print(self.sections[0].baseAxialLine)
 
         #Connect nose to origo
         self.sideProfileSketch.setCoincident(self.sections[0].baseAxialLine.startPoint(), self.sketchPoint.result())
