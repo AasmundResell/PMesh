@@ -2,7 +2,7 @@
 
 
 from Geometry.domain import DomainGenerator
-from Mesh.mesh import generateMesh
+from Mesh.mesh import MeshGenerator
 from Mesh.SU2msh import ExportSU2File
 import sys
 import salome
@@ -35,36 +35,38 @@ if __name__ == "__main__":
 
     name = "test_mesh"
     
+    #M910 Bullet
     params =  {
         "noseParams" : 
             {
                 "bodyType": "ConicNose",
-                "bodyLength": 40,
-                "bodyRadius": 30,
+                "bodyLength": 41.2,
+                "bodyRadius": 16.2/2,
+                "bodyRadiusFront": 2.2/2,
             },
         "bodyParams" : 
             {
             1 : {
                 "bodyType": "HorizontalSection",
-                "bodyLength": 50,
-                "bodyRadius": 30,
+                "bodyLength": 73.9-41.2,
+                "bodyRadius": 16.2/2,
                 },
             2 : { 
                 "bodyType": "LinearTransitionSection",
-                "bodyLength": 40,
-                "bodyRadius": 50,
-                "bodyRadiusFront": 30,
+                "bodyLength": 0.2,
+                "bodyRadius": 30,
+                "bodyRadiusFront": 50,
                 },
             },
         "finParams":
-        {
-            "finType": "SquareFins",
-            "axialStartPosition": 100,
-            "radialBasePosition": 20,
-            "thickness" : 2,
-            "baseLength" : 20,
-            "baseHeight" : 10,
-        },
+            {
+                "finType": "SquareFins",
+                "axialStartPosition": 100,
+                "radialBasePosition": 20,
+                "thickness" : 2,
+                "baseLength" : 20,
+                "baseHeight" : 10,
+            },
         "domainParams":
         {
             "lengthFront": 200,
@@ -75,12 +77,14 @@ if __name__ == "__main__":
 
     geomDomain = DomainGenerator(name)
 
-
     geomDomain.makeGeometry(params)
 
-    Mesh = generateMesh(geomDomain)
+    mesher = MeshGenerator()
+
+    Mesh = mesher.generateMesh(geomDomain)
 
     ExportSU2File(mesh=Mesh,file=name)
+
     if salome.sg.hasDesktop():
         salome.sg.updateObjBrowser()
 

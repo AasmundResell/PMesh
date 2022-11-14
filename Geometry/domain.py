@@ -33,7 +33,7 @@ class DomainGenerator:
         for i,section in enumerate(self.projectile.sections):
             revoluteSection = []
             for j in range(len(section.faceID)):
-                print(section.faceID[j])
+                
                 ### Create Export
                 export = model.exportToXAO(self.projectile.part_doc, '/tmp/shaper_{}.xao'.format(section.faceID[j]), model.selection("FACE", "Revolution_{0}_{1}".format(i+1,j+1)), 'XAO')
                 
@@ -70,8 +70,8 @@ class DomainGenerator:
 
         self.generateGeomProjectileFromFaces()
 
-        self.generateOuterDomain()
-        
+        self.generateDomains()
+
     def generateGeomProjectileFromFaces(self):
 
         self.projectileGroups = [] #Contains all groups that holds faces desbribing the projectile geometry
@@ -81,7 +81,7 @@ class DomainGenerator:
             for j,faceNum in enumerate(section.outerFacesID):
                 
                 group =self.geompy.CreateGroup(self.revolutionFacesGeom[i][faceNum],self.geompy.ShapeType["FACE"])
-                self.geompy.UnionIDs(group, [1])
+                self.geompy.UnionList(group, [self.revolutionFacesGeom[i][faceNum]])
                 self.projectileGroups.append(group)
 
                 self.geompy.addToStudyInFather( self.revolutionFacesGeom[i][faceNum], group, section.faceID[faceNum] )
@@ -92,7 +92,7 @@ class DomainGenerator:
         self.geompy.addToStudy( self.projectileGeom, 'Projectile' )
 
 
-    def generateOuterDomain(self):
+    def generateDomains(self):
 
         totalDomainLength = self.FrontDomainLength + self.BackDomainLength + self.projectile.totalLength
         startCylindeVertex = self.geompy.MakeVertex(-self.FrontDomainLength, 0, 0) #Point where the cylinder is extruded from
@@ -100,7 +100,30 @@ class DomainGenerator:
         cylinderDomain = self.geompy.MakeCylinder(startCylindeVertex, unitVecX, self.domainRadius, totalDomainLength)
 
         self.domain = self.geompy.MakeCutList(cylinderDomain, [self.projectileGeom], True)
-
+        
         self.geompy.addToStudy( startCylindeVertex, 'VertexCylinder' )
-        self.geompy.addToStudy( cylinderDomain, 'Cylinder' )
+        cylinderID = self.geompy.addToStudy( cylinderDomain, 'Cylinder' )
         self.geompy.addToStudy( self.domain, 'Domain' )
+        print("Cylinder id: ",cylinderID)
+
+        Farfield = self.geompy.CreateGroup(self.domain, self.geompy.ShapeType["FACE"])
+        self.geompy.UnionIDs(Farfield, [3, 10, 12])
+        Rocket_1 = self.geompy.CreateGroup(self.domain, self.geompy.ShapeType["FACE"])
+        self.geompy.UnionIDs(Rocket_1, [15, 22, 27, 32])
+        
+        [self.Farfield, self.Projectile] = self.geompy.GetExistingSubObjects(self.domain, False)
+        
+        self.geompy.addToStudyInFather( self.domain, self.Farfield, 'Farfield' )
+        self.geompy.addToStudyInFather( self.domain, self.Projectile, 'Projectile' )
+        
+        faceIDs = self.geompy.SubShapeAllIDs(self.domain, self.geompy.ShapeType["FACE"])
+
+        self.domainFaces = 3
+        
+        self.domainIDs = faceIDs[0:self.domainFaces]
+        self.projectileIDs = faceIDs[self.domainFaces:]
+        print("Domain IDs: ",self.domainIDs)
+        print("Projectile IDs: ",self.projectileIDs)
+
+
+        
