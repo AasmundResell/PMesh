@@ -14,7 +14,8 @@ class Body:
     self.baseLength = bodyParam["bodyLength"]
     self.baseRadius = bodyParam["bodyRadius"]
 
-    self.startRadius = None
+    self.startRadius = bodyParam["bodyRadiusFront"]
+    
     self.sectionNumber = sectionNumber
     
     self.faceID = None
@@ -67,28 +68,37 @@ class ConicNose(Body):
     def __init__(self,noseParam,sectionNumber):
       Body.__init__(self,noseParam,sectionNumber)
       
-      self.faceID = ["ConicNose","end_0"]    
-      self.outerFacesID = [0]
+      self.faceID = ["start_0","ConicNose","end_0"]    
+      self.outerFacesID = [0,1]
 
     def addSketchLines(self,Sketch,axialStartPoint):
 
       Sketch = Body.addSketchLines(self,Sketch,axialStartPoint)
 
-      self.noseConicLine = Sketch.addLine(self.baseLength,self.baseRadius,0,0)
+      self.noseConicLine = Sketch.addLine(self.baseLength,self.baseRadius,0,self.startRadius)
 
       self.noseConicLine.setName("noseConicLine")
       self.noseConicLine.result().setName("noseConicLine")
 
+
+      self.noseFrontLine = Sketch.addLine(0,0,0,self.startRadius)
+      Sketch.setVertical(self.noseFrontLine)
+
+      self.noseFrontLine.setName("noseFrontLine")
+      self.noseFrontLine.result().setName("noseFrontLine")
+      
       #Complete section for the nose
       Sketch.setCoincident(self.baseRadialLine.endPoint(),self.noseConicLine.startPoint())
-      Sketch.setCoincident(self.baseAxialLine.startPoint(),self.noseConicLine.endPoint())
+      Sketch.setCoincident(self.noseFrontLine.endPoint(),self.noseConicLine.endPoint())
+      Sketch.setCoincident(self.baseAxialLine.startPoint(),self.noseFrontLine.startPoint())
 
 
     def generateRevolution(self):
 
       revolution_selections = []
       
-
+      revolution_selections.append(model.selection("EDGE","Sketch_1/noseFrontLine"))
+      
       revolution_selections.append(model.selection("EDGE","Sketch_1/noseConicLine"))
       
       radialLine, revolutionVector = Body.generateRevolutionBase(self)
@@ -102,7 +112,7 @@ class TangenOgiveNose(Body):
     def __init__(self,noseParam,sectionNumber):
       
       Body.__init__(self,noseParam,sectionNumber)
-      self.outerFacesID = [0]
+      self.outerFacesID = [0,1]
       
       self.faceID = ["TangentOgiveNose","end_0"]    
       assert (self.sectionNumber != 0); ValueError("Nose is always section zero")
@@ -121,16 +131,26 @@ class TangenOgiveNose(Body):
       self.noseOgiveCurve.result().setName("noseOgiveCurve")
 
 
+      self.noseFrontLine = Sketch.addLine(0,0,0,self.startRadius)
+      Sketch.setVertical(self.noseFrontLine)
+
+      self.noseFrontLine.setName("noseFrontLine")
+      self.noseFrontLine.result().setName("noseFrontLine")
+      
       #Complete section for the nose
       Sketch.setCoincident(self.baseRadialLine.endPoint(),self.noseOgiveCurve.startPoint())
-      Sketch.setCoincident(self.baseAxialLine.startPoint(),self.noseOgiveCurve.endPoint())
-    
+      Sketch.setCoincident(self.noseFrontLine.endPoint(),self.noseOgiveCurve.endPoint())
+      Sketch.setCoincident(self.baseAxialLine.startPoint(),self.noseFrontLine.startPoint())
+
+
     def generateRevolution(self):
 
       revolution_selections = []
       
       radialLine, revolutionVector = Body.generateRevolutionBase(self)
 
+      revolution_selections.append(model.selection("EDGE","Sketch_1/noseFrontLine"))
+      
       revolution_selections.append(model.selection("EDGE","Sketch_1/noseOgiveCurve"))
       
       revolution_selections.append(radialLine)
@@ -141,6 +161,10 @@ class TangenOgiveNose(Body):
 class HorizontalSection(Body):    
     def __init__(self,bodyDict,sectionNumber):
       
+      baseRadius = bodyDict["bodyRadius"]
+
+      bodyDict["bodyRadiusFront"]=baseRadius
+
       Body.__init__(self,bodyDict,sectionNumber)
       self.outerFacesID = [1]
       
@@ -189,7 +213,6 @@ class LinearTransitionSection(Body):
       
       self.faceID = ["start_{0}_{1}".format(sectionNumber-1,sectionNumber),"middle_{}".format(sectionNumber),"end_{0}_{1}".format(sectionNumber-1,sectionNumber)]    
       
-      self.startRadius = bodyDict["bodyRadiusFront"]
     
 
     def addSketchLines(self, Sketch, axialStartPoint):
