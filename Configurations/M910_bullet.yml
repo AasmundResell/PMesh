@@ -6,9 +6,10 @@ geometry:
   projectile:
     noseParams : #Types of noses: ConicNose, TangentOgiveNose
       bodyType: ConicNose
+      cutNoseBy: Absolute #Absolute or Relative, Absolute by default
       bodyLength: 41.2
       bodyRadius: 8.1
-      bodyRadiusFront: 1.1
+      meplatRadius: 1.1 #Specify nose cut by "meplatRadius" or "meplatCutFromTip"
     bodyParams : 
       section_1:        
         bodyType: HorizontalSection
@@ -16,8 +17,8 @@ geometry:
         bodyRadius: 8.1
       section_2:
         bodyType: LinearTransitionSection
-        bodyLength: 0.2
-        bodyRadius: 7.9
+        bodyLength: 2.0
+        bodyRadius: 6.1
         bodyRadiusFront: 8.1
     finParams:
       finType: SquareFins

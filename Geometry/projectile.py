@@ -1,7 +1,7 @@
 
 from salome.shaper import model
 
-from Geometry.body import ConicNose, TangenOgiveNose, HorizontalSection, LinearTransitionSection 
+from Geometry.section import ConicNose, TangenOgiveNose, HorizontalSection, LinearTransitionSection 
 
 class ProjectileModel:
     def __init__(self):
@@ -33,12 +33,12 @@ class ProjectileModel:
         import salome
         
         if kwargs.get("noseParams"):
-            self.createNose(kwargs.get("noseParams"))
+            self.createNose(**kwargs.get("noseParams"))
         else:
             raise RuntimeError("Nose parameters must be specified")
     
         if kwargs.get("bodyParams"):
-            self.createBodies(kwargs.get("bodyParams"))
+            self.createBodies(**kwargs.get("bodyParams"))
 
         
         self.connectSections()
@@ -48,15 +48,15 @@ class ProjectileModel:
 
         
        
-    def createNose(self,noseParam):
+    def createNose(self,**noseParam):
 
         print("Creating nose section")
         if noseParam["bodyType"] == "ConicNose":
-            nose = ConicNose(noseParam,0)
+            nose = ConicNose(0,**noseParam)
             self.sections.insert(0,nose)
             self.sections[0].num_faces = 2
         elif noseParam["bodyType"] == "TangentOgiveNose":
-            nose = TangenOgiveNose(noseParam,0)
+            nose = TangenOgiveNose(0,**noseParam)
             self.sections.insert(0,nose)
             self.sections[0].num_faces = 2
         else:
@@ -65,7 +65,7 @@ class ProjectileModel:
         self.sections[0].addSketchLines(self.sideProfileSketch,axialStartPoint=0.0)
         self.totalLength = self.totalLength + self.sections[0].baseLength
 
-    def createBodies(self,bodyParamList):
+    def createBodies(self,**bodyParamList):
 
         print("Creating body sections")
 
@@ -74,9 +74,9 @@ class ProjectileModel:
         for i in range(1,len(bodyParamList)+1):
             sectionParams = bodyParamList["section_{}".format(i)]
             if sectionParams["bodyType"] == "HorizontalSection":
-                body = HorizontalSection(sectionParams,i)
+                body = HorizontalSection(i,**sectionParams)
             elif sectionParams["bodyType"] == "LinearTransitionSection":
-                body = LinearTransitionSection(sectionParams,i)
+                body = LinearTransitionSection(i,**sectionParams)
             else:
                 raise AssertionError("Invalid body type specified")
                 
@@ -107,7 +107,7 @@ class ProjectileModel:
             self.sideProfileSketch.setCoincident(self.sections[i-1].baseAxialLine.endPoint(),self.sections[i].baseAxialLine.startPoint())
             
             #Connect upper lines
-            if (self.sections[i-1].baseRadius == self.sections[i].startRadius):
+            if (self.sections[i-1].baseRadius == self.sections[i].frontRadius):
                 self.sideProfileSketch.setCoincident(self.sections[i-1].baseRadialLine.endPoint(),self.sections[i].upperContourLine.startPoint())
 
 

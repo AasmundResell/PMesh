@@ -16,14 +16,15 @@ class MeshGenerator():
         Defines the algorithms for the volume mesh
         """
         #TODO
-        print("TEMP")
-
+        
+        return None
+    
     def defineSurfaceAlg(self):
         """
         Defines the algorithms for the surface mesh
         """
         #TODO
-        print("TEMP")
+        return None
 
     def generateMesh(self,geomDomain):    
     
@@ -81,8 +82,10 @@ class MeshGenerator():
         self.smesh.SetName(Viscous_Layers_1, 'Viscous Layers_1')
         self.smesh.SetName(NETGEN_2D_Parameters_1, 'NETGEN 2D Parameters_1')
 
+        info = self.mesh.GetMeshInfo()
+        print("Mesh info: ",info)
         return self.mesh
 
     def checkMeshQuality(self):
         #TODO
-        print("TEMP")
+        return None

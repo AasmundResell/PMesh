@@ -1,24 +1,25 @@
 system:
-  name: M910_bullet
+  name: Ogive_Test
 
 
 geometry:
   projectile:
     noseParams : #Types of noses: ConicNose, TangentOgiveNose
-      bodyType: ConicNose
-      bodyLength: 41.2
-      bodyRadius: 8.1
-      bodyRadiusFront: 1.1
+      bodyType: TangentOgiveNose
+      bodyLength: 10.3
+      bodyRadius: 2.1
+      #tangentOgiveRadius : 47
+      meplatCutLength: 1.1 #Alternatively meplatCutLength
     bodyParams : 
       section_1:        
         bodyType: HorizontalSection
-        bodyLength: 32.7
-        bodyRadius: 8.1
+        bodyLength: 5
+        bodyRadius: 2.1
       section_2:
         bodyType: LinearTransitionSection
-        bodyLength: 0.2
-        bodyRadius: 30
-        bodyRadiusFront: 50
+        bodyLength: 2.0
+        bodyRadius: 1.8
+        bodyRadiusFront: 2.1
     finParams:
       finType: SquareFins
       axialStartPosition: 100
@@ -33,4 +34,4 @@ geometry:
     radius: 200
 
 mesh:
-  inflationLayers: True
+  inflationxLayers: True

@@ -66,8 +66,6 @@ class DomainGenerator:
         
         model.end()
         
-        
-
         self.revolutionFacesGeom = []
 
         for i,section in enumerate(self.projectile.sections):
