@@ -8,8 +8,10 @@ geometry:
       bodyType: TangentOgiveNose
       bodyLength: 10.3
       bodyRadius: 2.1
-      #tangentOgiveRadius : 47
+      tangentOgiveRadius : 47
       meplatCutLength: 1.1 #Alternatively meplatCutLength
+      sphericallyBluntedNose:
+        sphereRadius: 1.3
     bodyParams : 
       section_1:        
         bodyType: HorizontalSection

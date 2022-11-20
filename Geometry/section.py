@@ -147,6 +147,131 @@ class TangenOgiveNose(Section):
     def __init__(self,sectionNumber,**noseParams):
       Section.__init__(self,sectionNumber,**noseParams)
       
+      self.warningParameters(**noseParams)
+      self.calculateGeometry(**noseParams)
+      
+      if self.frontRadius > 0.0: 
+        self.outerFacesID = [0,1]
+        self.faceID = ["start_0","TangentOgiveNose","end_0"]    
+      elif self.frontRadius == 0.0:
+        self.outerFacesID = [0]
+        self.faceID = ["TangentOgiveNose","end_0"]    
+      else:
+        raise RuntimeError("Front radius of TangentOgiveNose most be zero or a postive number")
+    
+      
+    def calculateGeometry(self,**noseParams): 
+
+      import copy
+
+      #See: https://en.wikipedia.org/wiki/Nose_cone_design#Tangent_ogive for reference to variables info
+
+      self.R = copy.deepcopy(self.baseRadius) #Base radius is unambiguously defined
+
+      if noseParams.get("tangentOgiveRadius"):
+        self.rho = noseParams.get("tangentOgiveRadius")
+        self.L = calcTangentOgiveLength(self.rho,self.R) #If rho is defined, L is unambiguously defined
+
+        #Any defined front radius is overriden when rho is specified
+        if self.baseLength > self.L:
+          self.baseLength = self.L
+          self.frontRadius = 0.0
+        else: 
+            self.frontRadius = calcTangentOgiveY(self.rho,self.R,self.L - self.baseLength)
+
+      else: #If rho is not defined in config file
+        self.L = copy.deepcopy(self.baseLength) #In this case, the original base length is always equal to L
+        self.rho = calcTangentOgiveRadius(self.L,self.R)
+        
+        if noseParams.get("meplatCutLength"):
+          l = noseParams.get("meplatCutLength")
+          self.frontRadius = calcTangentOgiveY(self.rho,self.R,self.L - l)
+        elif self.frontRadius > 0.0:
+          l = calcTangentOgiveX(self.rho,self.R,self.frontRadius)
+        else: #No tip cut defined
+          l = 0.0
+          self.frontRadius = 0.0
+        self.baseLength = self.L - l  
+
+
+      #TODO: Consider making seperate class for spherically blunted tangent ogive
+      #Defines geometrical parameters if spherically blunted nose is defined
+      if noseParams.get("sphericallyBluntedNose"):
+        radius_sphere = noseParams.get("sphereRadius")
+        self.point_center, self.point_front, self.pointTangent = calcSphereBluntedOgiveNose(self.rho,self.R,radius_sphere) 
+        
+
+
+    def warningParameters(self,**noseParams):
+      """
+      Warns the user if conflicting configurations are defined and which parameters
+      that are overidden. 
+      """
+
+      if noseParams.get("tangentOgiveRadius") and (noseParams.get("meplatCutLength") or 
+      noseParams.get("meplatRadius") or noseParams.get("frontRadius")):
+        Warning('Any defined nose cutting parameters is overriden by the tangent ogive radius!')
+      else:
+        print("HEi")
+
+      if noseParams.get("sphericallyBluntedNose"):
+        try:
+         noseParams.get("sphereRadius")
+        except:
+          RuntimeError('Sphere radius must be defined when spherically blunted nose is defined')
+
+
+    def addSketchLines(self,Sketch,axialStartPoint):
+
+      Sketch = Section.addSketchLines(self,Sketch,axialStartPoint)
+
+
+      #Assuming absolute values specify the tangent ogive nose
+
+
+      self.noseOgiveArc = Sketch.addArc(self.baseLength, self.baseRadius-self.rho, 0.0, self.frontRadius, self.baseLength, self.baseRadius, True)
+      self.noseOgiveArc.setName("noseCurve")
+      self.noseOgiveArc.results()[1].setName("noseOgiveCurve")
+      self.noseOgiveArc.result().setName("noseCurve")
+
+      Sketch.setCoincident(self.baseRadialLine.endPoint(),self.noseOgiveArc.endPoint())
+      
+      if self.frontRadius > 0.0:
+      
+        self.noseFrontLine = Sketch.addLine(0,0,0,self.frontRadius)
+        Sketch.setVertical(self.noseFrontLine)
+
+        self.noseFrontLine.setName("noseFrontLine")
+        self.noseFrontLine.result().setName("noseFrontLine")
+
+        #Complete section for the nose
+        Sketch.setCoincident(self.noseFrontLine.endPoint(),self.noseOgiveArc.startPoint())
+        Sketch.setCoincident(self.baseAxialLine.startPoint(),self.noseFrontLine.startPoint())
+      else:
+        Sketch.setCoincident(self.baseAxialLine.startPoint(),self.noseOgiveArc.startPoint())
+        
+
+
+    def generateRevolution(self):
+
+      revolution_selections = []
+      
+      radialLine, revolutionVector = Section.generateRevolutionBase(self)
+
+      revolution_selections.append(model.selection("EDGE","Sketch_1/noseFrontLine"))
+      
+      revolution_selections.append(model.selection("EDGE","Sketch_1/noseOgiveCurve"))
+      
+      revolution_selections.append(radialLine)
+      
+      return revolution_selections,revolutionVector
+
+    
+class SecantOgiveNose(Section):
+    
+    def __init__(self,sectionNumber,**noseParams):
+      Section.__init__(self,sectionNumber,**noseParams)
+      
       
       self.calculateGeometry(**noseParams)
       
@@ -238,7 +363,6 @@ class TangenOgiveNose(Section):
       revolution_selections.append(radialLine)
       
       return revolution_selections,revolutionVector
-
            
 class HorizontalSection(Section):    
     def __init__(self,sectionNumber,**bodyParams):

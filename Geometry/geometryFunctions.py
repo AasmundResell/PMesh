@@ -37,3 +37,23 @@ def calcTangentOgiveX(rho,R,y):
   """
   L = calcTangentOgiveLength(rho,R)
   return L - (rho**2-(rho+y-R)**2)**(1/2)
+
+def calcSphereBluntedOgiveNose(rho,R,r_n):
+  """
+  Calculates the 3 points defining the arc for the spherically blunted ogive nose.
+  Reference: https://en.wikipedia.org/wiki/Nose_cone_design
+  input:
+
+  returns:
+    1st point: center point of the circle defining the arc (x_0,y_0)
+    2nd point: the front point of the nose (x_a,y_a)
+    3rd point: the tangency point of the sphere with the ogive curve of the nose (x_t,y_t)
+  """
+  L = calcTangentOgiveLength(rho,R)
+  y_0 = 0.0
+  x_0 = L - ((rho-r_n)**2-(rho-R)**2)**(1/2)
+  y_t = r_n*(rho-R)/(rho-r_n)
+  x_t = x_0 - (r_n**2-y_t**2)**(1/2)
+  y_a = 0.0
+  x_a = x_0 - r_n
+  return (x_0,y_0), (x_t,y_t), (x_a,y_a)
