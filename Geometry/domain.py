@@ -55,6 +55,7 @@ class DomainGenerator:
             for j in range(len(section.faceID)):
                 
                 ### Create Export
+                print('/tmp/shaper_{}.xao'.format(section.faceID[j]))
                 model.exportToXAO(self.projectile.part_doc, '/tmp/shaper_{}.xao'.format(section.faceID[j]), model.selection("FACE", "Revolution_{0}_{1}".format(i+1,j+1)), 'XAO')
                 
                 if j == 0:
@@ -71,6 +72,7 @@ class DomainGenerator:
         for i,section in enumerate(self.projectile.sections):
             revolutions_section = []
             for j in range(len(section.faceID)):
+                print("/tmp/shaper_{}.xao".format(section.faceID[j]))
                 (imported, revolution, [], [], []) = self.geompy.ImportXAO("/tmp/shaper_{}.xao".format(section.faceID[j]))
                 self.geompy.addToStudy( revolution, 'Revolution_{0}_{1}'.format(i+1,j+1) )
 

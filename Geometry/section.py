@@ -44,8 +44,8 @@ class Section:
 
 
     #Constraints    
-    Sketch.setHorizontal(self.baseAxialLine)
-    Sketch.setVertical(self.baseRadialLine)
+    Sketch.setHorizontal(self.baseAxialLine.result())
+    Sketch.setVertical(self.baseRadialLine.result())
 
     #Ensure coindident points
     Sketch.setCoincident(self.baseAxialLine.endPoint(), self.baseRadialLine.startPoint())
@@ -147,10 +147,15 @@ class TangenOgiveNose(Section):
     def __init__(self,sectionNumber,**noseParams):
       Section.__init__(self,sectionNumber,**noseParams)
       
+      if noseParams.get("sphericallyBluntedNose"):
+        self.sphericalBluntedNose = True
+      else:
+        self.sphericalBluntedNose = False
+      
       self.warningParameters(**noseParams)
       self.calculateGeometry(**noseParams)
-      
-      if self.frontRadius > 0.0: 
+        
+      if self.frontRadius > 0.0 or self.sphericalBluntedNose: 
         self.outerFacesID = [0,1]
         self.faceID = ["start_0","TangentOgiveNose","end_0"]    
       elif self.frontRadius == 0.0:
@@ -196,10 +201,19 @@ class TangenOgiveNose(Section):
 
       #TODO: Consider making seperate class for spherically blunted tangent ogive
       #Defines geometrical parameters if spherically blunted nose is defined
-      if noseParams.get("sphericallyBluntedNose"):
-        radius_sphere = noseParams.get("sphereRadius")
-        self.point_center, self.point_front, self.pointTangent = calcSphereBluntedOgiveNose(self.rho,self.R,radius_sphere) 
+      if self.sphericalBluntedNose:
+        radius_sphere = noseParams.get("sphericallyBluntedNose").get("sphereRadius")
         
+        
+        (self.point_center_x, _ , offset , _, self.point_tangent_x,self.point_tangent_y) = calcSphereBluntedOgiveNose(self.rho,self.R,radius_sphere)
+        
+        #Subtract the offset to place noce tip in origo, the offset is the x coordinate of the front tip of the blunted nose
+        
+        #Subtract the offset to place noce tip in origo, the offset is the x coordinate of the front tip of the blunted nose
+        self.baseLength = self.L - offset
+        self.point_center_x = self.point_center_x - offset
+        self.point_tangent_x = self.point_tangent_x - offset
+
 
 
     def warningParameters(self,**noseParams):
@@ -214,29 +228,85 @@ class TangenOgiveNose(Section):
       else:
         print("HEi")
 
-      if noseParams.get("sphericallyBluntedNose"):
+      if self.sphericalBluntedNose:
         try:
-         noseParams.get("sphereRadius")
+         r = noseParams.get("sphericallyBluntedNose").get("sphereRadius")
         except:
           RuntimeError('Sphere radius must be defined when spherically blunted nose is defined')
 
 
     def addSketchLines(self,Sketch,axialStartPoint):
 
-      Sketch = Section.addSketchLines(self,Sketch,axialStartPoint)
-
-
-      #Assuming absolute values specify the tangent ogive nose
-
-
-      self.noseOgiveArc = Sketch.addArc(self.baseLength, self.baseRadius-self.rho, 0.0, self.frontRadius, self.baseLength, self.baseRadius, True)
-      self.noseOgiveArc.setName("noseCurve")
-      self.noseOgiveArc.results()[1].setName("noseOgiveCurve")
-      self.noseOgiveArc.result().setName("noseCurve")
-
-      Sketch.setCoincident(self.baseRadialLine.endPoint(),self.noseOgiveArc.endPoint())
       
-      if self.frontRadius > 0.0:
+      Sketch = Section.addSketchLines(self,Sketch,axialStartPoint)
+      
+      #Assuming absolute values specify the tangent ogive nose
+      if self.sphericalBluntedNose:
+
+     
+
+
+        ### Create SketchLine
+        self.baseRadialLine = Sketch.addLine(self.baseLength, 0, self.baseLength, self.baseRadius)
+        
+        Sketch.setVerticalDistance(self.baseAxialLine.endPoint(), self.baseRadialLine.endPoint(), self.baseRadius)
+
+        ### Create SketchLine
+        self.supportLineNose = Sketch.addLine(self.point_tangent_x, 0, self.point_tangent_x, self.point_tangent_y)
+        self.supportLineNose.setName("supportLineNose")
+        self.supportLineNose.result().setName("supportLineNose")
+        Sketch.setVertical(self.supportLineNose.result())
+
+        ### Create SketchPoint
+        self.tangentNosePoint = Sketch.addPoint(self.point_tangent_x, self.point_tangent_y)
+        self.tangentNosePoint.setName("tangentNosePoint")
+        self.tangentNosePoint.result().setName("tangentNosePoint")
+        Sketch.setCoincident(self.supportLineNose.endPoint(), self.tangentNosePoint.coordinates())
+
+        ### Create SketchLine
+        self.supportLineOgive = Sketch.addLine(self.baseLength, 0, self.baseLength, self.baseRadius-self.rho)
+        self.supportLineOgive.setName("supportLineOgive")
+        self.supportLineOgive.result().setName("supportLineOgive")
+        Sketch.setCoincident(self.baseAxialLine.endPoint(), self.supportLineOgive.startPoint())
+        Sketch.setVertical(self.supportLineOgive.result())
+        Sketch.setVerticalDistance(self.supportLineOgive.startPoint(), self.supportLineOgive.endPoint(), self.rho-self.baseRadius)
+
+        ### Create SketchPoint
+        self.supportPointNose = Sketch.addPoint(self.point_tangent_x, 0)
+        self.supportPointNose.setName("supportPointNose")
+        self.supportPointNose.result().setName("supportPointNose")
+        Sketch.setCoincident(self.supportLineNose.startPoint(), self.supportPointNose.coordinates())
+
+        ### Create SketchPoint
+        self.supportPointOgive = Sketch.addPoint(self.baseLength, self.baseRadius)
+        self.supportPointOgive.setName("supportPointOgive")
+        self.supportPointOgive.result().setName("supportPointOgive")
+        Sketch.setCoincident(self.baseRadialLine.endPoint(), self.supportPointOgive.coordinates())
+        Sketch.setVerticalDistance(self.supportPointNose.coordinates(), self.supportLineNose.endPoint(), self.point_tangent_y)
+
+        ### Create SketchArc
+        self.noseBluntArc = Sketch.addArc(self.point_center_x, 0, self.point_tangent_x, self.point_tangent_y, 0, 0, False)
+        Sketch.setCoincident(self.supportLineNose.endPoint(), self.noseBluntArc.startPoint())
+        Sketch.setCoincident(self.noseBluntArc.endPoint(), self.baseAxialLine.result())
+
+        ### Create SketchArc
+        self.noseOgiveArc = Sketch.addArc(self.baseLength, self.baseRadius-self.rho, self.point_tangent_x,self.point_tangent_y, self.baseLength, self.baseRadius, True)
+        Sketch.setCoincident(self.supportLineOgive.endPoint(), self.noseOgiveArc.center())
+        Sketch.setCoincident(self.supportLineNose.endPoint(), self.noseOgiveArc.startPoint())
+        Sketch.setCoincident(self.baseRadialLine.result(), self.noseOgiveArc.endPoint())
+ 
+
+
+        
+      else:
+        Sketch = Section.addSketchLines(self,Sketch,axialStartPoint)
+        self.noseOgiveArc = Sketch.addArc(self.baseLength, self.baseRadius-self.rho, 0.0, self.frontRadius, self.baseLength, self.baseRadius, True)
+        self.noseBluntArc = None
+    
+        Sketch.setCoincident(self.baseRadialLine.endPoint(),self.noseOgiveArc.endPoint())
+      
+
+      if self.frontRadius > 0.0 and not self.sphericalBluntedNose:
       
         self.noseFrontLine = Sketch.addLine(0,0,0,self.frontRadius)
         Sketch.setVertical(self.noseFrontLine)
@@ -247,8 +317,8 @@ class TangenOgiveNose(Section):
         #Complete section for the nose
         Sketch.setCoincident(self.noseFrontLine.endPoint(),self.noseOgiveArc.startPoint())
         Sketch.setCoincident(self.baseAxialLine.startPoint(),self.noseFrontLine.startPoint())
-      else:
-        Sketch.setCoincident(self.baseAxialLine.startPoint(),self.noseOgiveArc.startPoint())
+      #else:
+        #Sketch.setCoincident(self.baseAxialLine.startPoint(),self.noseOgiveArc.startPoint())
         
 
 
@@ -257,10 +327,14 @@ class TangenOgiveNose(Section):
       revolution_selections = []
       
       radialLine, revolutionVector = Section.generateRevolutionBase(self)
-
-      revolution_selections.append(model.selection("EDGE","Sketch_1/noseFrontLine"))
+      if self.sphericalBluntedNose:
+        revolution_selections.append(model.selection("EDGE","Sketch_1/SketchArc_1_2"))  
+        revolution_selections.append(model.selection("EDGE","Sketch_1/SketchArc_2_2"))  
+      else:
+        if self.frontRadius > 0.0 and not self.sphericalBluntedNose:
+          revolution_selections.append(model.selection("EDGE","Sketch_1/noseFrontLine"))
       
-      revolution_selections.append(model.selection("EDGE","Sketch_1/noseOgiveCurve"))
+        revolution_selections.append(model.selection("EDGE","Sketch_1/noseOgiveCurve"))
       
       revolution_selections.append(radialLine)
       
@@ -374,7 +448,7 @@ class HorizontalSection(Section):
       Section.__init__(self,sectionNumber,**bodyParams)
       self.outerFacesID = [1]
       
-      self.faceID = ["start_{0}_{1}".format(sectionNumber-1,sectionNumber),"middle_{}".format(sectionNumber),"end_{0}_{1}".format(sectionNumber-1,sectionNumber)]    
+      self.faceID = ["start_{0}_{1}".format(sectionNumber-1,sectionNumber),"middle_{}".format(sectionNumber),"end_{0}_{1}".format(sectionNumber,sectionNumber+1)]    
       
       self.frontRadius = self.baseRadius
     
@@ -417,7 +491,7 @@ class LinearTransitionSection(Section):
       Section.__init__(self,sectionNumber,**bodyParams)
       self.outerFacesID = [1]
       
-      self.faceID = ["start_{0}_{1}".format(sectionNumber-1,sectionNumber),"middle_{}".format(sectionNumber),"end_{0}_{1}".format(sectionNumber-1,sectionNumber)]    
+      self.faceID = ["start_{0}_{1}".format(sectionNumber-1,sectionNumber),"middle_{}".format(sectionNumber),"end_{0}_{1}".format(sectionNumber,sectionNumber+1)]    
       
     
 

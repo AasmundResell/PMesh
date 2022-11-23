@@ -73,7 +73,7 @@ if __name__ == "__main__":
         
         
     notebook = salomeInit(salomeRun)
-    ymlFile = open("Configurations/Ogive_test.yml") 
+    ymlFile = open("Examples/Ogive_test.yml") 
     
     parsedValues = yaml.load(ymlFile, Loader=yaml.FullLoader)
     SystemSettings = parsedValues['system']

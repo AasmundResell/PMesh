@@ -40,7 +40,8 @@ class ProjectileModel:
         if kwargs.get("bodyParams"):
             self.createBodies(**kwargs.get("bodyParams"))
 
-        
+        self.sections[-1].makeEndSection() #Make last section end section      
+      
         self.connectSections()
 
         model.do()
@@ -90,8 +91,7 @@ class ProjectileModel:
             self.totalLength = self.totalLength + self.sections[i].baseLength
 
         
-        self.sections[-1].makeEndSection() #Make last section end section      
-      
+        
 
     def connectSections(self):
         """
