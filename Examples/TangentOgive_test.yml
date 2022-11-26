@@ -1,5 +1,5 @@
 system:
-  name: Ogive_Test
+  name: TangentOgive_Test
 
 
 geometry:
@@ -7,21 +7,21 @@ geometry:
     noseParams : #Types of noses: ConicNose, TangentOgiveNose
       bodyType: TangentOgiveNose
       bodyLength: 12
-      bodyRadius: 2.1
-      tangentOgiveRadius : 47
-      #meplatCutLength: 1.1 #Alternatively meplatCutLength
-      sphericallyBluntedNose:
-        sphereRadius: 1.2
+      radiusBase: 2.1
+      radiusFront: 0.9 #Alternatively meplatCutLength
+      #tangentOgiveRadius : 47
+      #sphericallyBluntedNose:
+      #  sphereRadius: 1.2
     bodyParams : 
       section_1:        
         bodyType: HorizontalSection
         bodyLength: 5
-        bodyRadius: 2.1
+        radiusBase : 2.1
       section_2:
         bodyType: LinearTransitionSection
         bodyLength: 2.0
-        bodyRadius: 1.8
-        bodyRadiusFront: 2.1
+        radiusBase: 1.8
+        radiusFront: 2.1
     finParams:
       finType: SquareFins
       axialStartPosition: 100

@@ -1,4 +1,4 @@
-
+from math import *
 
 
 
@@ -46,9 +46,6 @@ def calcSphereBluntedOgiveNose(rho,R,r_n):
     2nd point: the front point of the nose (x_a,y_a)
     3rd point: the tangency point of the sphere with the ogive curve of the nose (x_t,y_t)
   """
-  print(rho)
-  print(R)
-  print(r_n)
   L = calcTangentOgiveLength(rho,R)
   y_0 = 0.0
   x_0 = L - ((rho-r_n)**2-(rho-R)**2)**(1/2)
@@ -57,3 +54,26 @@ def calcSphereBluntedOgiveNose(rho,R,r_n):
   y_a = 0.0
   x_a = x_0 - r_n
   return x_0, y_0, x_a, y_a, x_t, y_t
+
+def calcSecantOgiveAlpha(rho,R,L):
+  """
+  Calculates the angle alpha for the secant ogive curve.
+  Reference: https://en.wikipedia.org/wiki/Nose_cone_design
+  """
+  return acos((L**2+R**2)**(1/2)/(2*rho)) - atan(R/L)  
+
+def calcSecantOgiveY(rho, R, L, x ):
+  """
+  Calculates the radius y along the tangent ogive based on the axial length x.
+  Reference: https://en.wikipedia.org/wiki/Nose_cone_design
+  """
+  alpha = calcSecantOgiveAlpha(rho,R,L)
+  return (rho**2-(rho*cos(alpha)-x)**2)**(1/2)-rho*sin(alpha)
+
+def calcSecantOgiveX(rho, R, L, y ):
+  """
+  Calculates the radius y along the tangent ogive based on the axial length x.
+  Reference: https://en.wikipedia.org/wiki/Nose_cone_design
+  """
+  alpha = calcSecantOgiveAlpha(rho,R,L)
+  return rho*cos(alpha) - (rho**2-(rho*sin(alpha)+y)**2)**(1/2)

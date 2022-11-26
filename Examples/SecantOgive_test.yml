@@ -1,0 +1,39 @@
+system:
+  name: SecantOgive_Test
+
+
+geometry:
+  projectile:
+    noseParams : 
+      bodyType: SecantOgiveNose
+      bodyLength: 7
+      radiusBase: 2.1
+#      radiusFront: 0.5 #Alternatively meplatCutLength
+      secantOgiveRadius : 27
+#      sphericallyBluntedNose:
+#        sphereRadius: 1.2
+    bodyParams : 
+#      section_1:        
+#        bodyType: HorizontalSection
+#        bodyLength: 5
+#        radiusBase : 2.1
+#      section_2:
+#        bodyType: LinearTransitionSection
+#        bodyLength: 2.0
+#        radiusBase: 1.8
+#        radiusFront: 2.1
+    finParams:
+      finType: SquareFins
+      axialStartPosition: 100
+      radialBasePosition: 20
+      thickness : 2
+      baseLength : 20
+      baseHeight : 10
+  domain:  
+    domain_method: manual #manual or automatic, automatic calculate domain size based on projectile size (and mach number eventually)
+    lengthFront: 200
+    lengthBack: 200
+    radius: 200
+
+mesh:
+  inflationxLayers: True

@@ -1,7 +1,7 @@
 
 from salome.shaper import model
 
-from Geometry.section import ConicNose, TangenOgiveNose, HorizontalSection, LinearTransitionSection 
+from Geometry.section import ConicNose, TangenOgiveNose, SecantOgiveNose, HorizontalSection, LinearTransitionSection 
 
 class ProjectileModel:
     def __init__(self):
@@ -54,15 +54,14 @@ class ProjectileModel:
         print("Creating nose section")
         if noseParam["bodyType"] == "ConicNose":
             nose = ConicNose(0,**noseParam)
-            self.sections.insert(0,nose)
-            self.sections[0].num_faces = 2
         elif noseParam["bodyType"] == "TangentOgiveNose":
             nose = TangenOgiveNose(0,**noseParam)
-            self.sections.insert(0,nose)
-            self.sections[0].num_faces = 2
+        elif noseParam["bodyType"] == "SecantOgiveNose":
+            nose = SecantOgiveNose(0,**noseParam)
         else:
-            raise AssertionError("No valid nose type specified")
-  
+            raise RuntimeError("No valid nose type specified")
+        
+        self.sections.insert(0,nose)
         self.sections[0].addSketchLines(self.sideProfileSketch,axialStartPoint=0.0)
         self.totalLength = self.totalLength + self.sections[0].baseLength
 
@@ -114,7 +113,7 @@ class ProjectileModel:
 
     def revoluteSections(self):
 
-        self.revolutions = []
+        self.revolutions = [] 
         self.shaperstudy = []
         for section in self.sections:
             revolution_selections, revolution_vector = section.generateRevolution()   

@@ -73,7 +73,7 @@ if __name__ == "__main__":
         
         
     notebook = salomeInit(salomeRun)
-    ymlFile = open("Examples/Ogive_test.yml") 
+    ymlFile = open("Examples/SecantOgive_test.yml") 
     
     parsedValues = yaml.load(ymlFile, Loader=yaml.FullLoader)
     SystemSettings = parsedValues['system']
@@ -87,9 +87,8 @@ if __name__ == "__main__":
     geomDomain = DomainGenerator(**GeometryParams)
 
     geomDomain.makeGeometry()
-
+    
     mesher = MeshGenerator(name,**MeshParams)
-
     if salomeRun:
         Mesh = mesher.generateMesh(geomDomain)
     else:   
@@ -100,8 +99,10 @@ if __name__ == "__main__":
             quit()
     
     ExportSU2File(mesh=Mesh,file=name)
+    
 
-
+    
+    
     if salome.sg.hasDesktop():
         salome.sg.updateObjBrowser()
 

@@ -98,13 +98,13 @@ class DomainGenerator:
         
         for i,section in enumerate(self.projectile.sections):
             geoms = []
-            for j,faceNum in enumerate(section.outerFacesID):
+            for j in range(len(section.faceID)):
                 
-                group =self.geompy.CreateGroup(self.revolutionFacesGeom[i][faceNum],self.geompy.ShapeType["FACE"])
-                self.geompy.UnionList(group, [self.revolutionFacesGeom[i][faceNum]])
+                group =self.geompy.CreateGroup(self.revolutionFacesGeom[i][j],self.geompy.ShapeType["FACE"])
+                self.geompy.UnionList(group, [self.revolutionFacesGeom[i][j]])
                 self.projectileGroups.append(group)
 
-                self.geompy.addToStudyInFather( self.revolutionFacesGeom[i][faceNum], group, section.faceID[faceNum] )
+                self.geompy.addToStudyInFather( self.revolutionFacesGeom[i][j], group, section.faceID[j] )
                 
         fuseGeom =self.geompy.MakeFuseList(self.projectileGroups, True, True)
         self.projectileGeom =self.geompy.MakeSolid([fuseGeom])
