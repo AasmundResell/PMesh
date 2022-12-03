@@ -4,8 +4,9 @@ from salome.shaper import model
 from Geometry.section import ConicNose, TangenOgiveNose, SecantOgiveNose, HorizontalSection, LinearTransitionSection 
 
 class ProjectileModel:
-    def __init__(self):
+    def __init__(self,LengthConversion):
     
+        self.LengthConversion = LengthConversion
         model.begin()
 
         self.partSet = model.moduleDocument()
@@ -53,11 +54,11 @@ class ProjectileModel:
 
         print("Creating nose section")
         if noseParam["bodyType"] == "ConicNose":
-            nose = ConicNose(0,**noseParam)
+            nose = ConicNose(0,self.LengthConversion,**noseParam)
         elif noseParam["bodyType"] == "TangentOgiveNose":
-            nose = TangenOgiveNose(0,**noseParam)
+            nose = TangenOgiveNose(0,self.LengthConversion,**noseParam)
         elif noseParam["bodyType"] == "SecantOgiveNose":
-            nose = SecantOgiveNose(0,**noseParam)
+            nose = SecantOgiveNose(0,self.LengthConversion,**noseParam)
         else:
             raise RuntimeError("No valid nose type specified")
         
@@ -74,9 +75,9 @@ class ProjectileModel:
         for i in range(1,len(bodyParamList)+1):
             sectionParams = bodyParamList["section_{}".format(i)]
             if sectionParams["bodyType"] == "HorizontalSection":
-                body = HorizontalSection(i,**sectionParams)
+                body = HorizontalSection(i,self.LengthConversion,**sectionParams)
             elif sectionParams["bodyType"] == "LinearTransitionSection":
-                body = LinearTransitionSection(i,**sectionParams)
+                body = LinearTransitionSection(i,self.LengthConversion,**sectionParams)
             else:
                 raise AssertionError("Invalid body type specified")
                 

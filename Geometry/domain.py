@@ -13,12 +13,21 @@ from salome.shaper import model
 class DomainGenerator:
     def __init__(self,**kwargs):
 
-
         self.projectileParams = kwargs.get("projectile")
-        self.projectile = ProjectileModel() 
         
         domainParams = kwargs.get("domain")
 
+        if kwargs.get("unit") == "mm":
+            self.LengthConversion = 1.0
+        elif kwargs.get("unit") == "cal":
+            self.LengthConversion = 0.254
+        elif kwargs.get("unit") == "m":
+            self.LengthConversion = 1000.0      
+        elif kwargs.get("unit") == "inch":
+            self.LengthConversion = 25.4     
+        else:
+            self.LengthConversion = 1.0 #mm by default
+            
         if domainParams.get("domain_method") == "manual":
             self.readDomain(**domainParams)
         elif domainParams.get("domain_method") == "automatic":
@@ -26,18 +35,21 @@ class DomainGenerator:
         else:
           raise AssertionError("Method to specify the domain must be defined.")
 
+        self.projectile = ProjectileModel(self.LengthConversion) 
+        
+
     def readDomain(self,**kwargs):
         
-        self.FrontDomainLength = kwargs.get("lengthFront")
-        self.BackDomainLength = kwargs.get("lengthBack")
-        self.domainRadius = kwargs.get('radius')
+        self.FrontDomainLength = kwargs.get("lengthFront")*self.LengthConversion
+        self.BackDomainLength = kwargs.get("lengthBack")*self.LengthConversion
+        self.domainRadius = kwargs.get('radius')*self.LengthConversion
 
-    def caculateDomain(self):
+    def calculateDomain(self):
         """
         Function that calculates the size of the domain based on the size of the projectile
         and the specified mach number.
         """
-        print("TEMP")
+        a = "TEMP"
 
     def importProjectileFromShaper(self):
         
@@ -55,7 +67,7 @@ class DomainGenerator:
             for j in range(len(section.faceID)):
                 
                 ### Create Export
-                print('/tmp/shaper_{}.xao'.format(section.faceID[j]))
+                
                 model.exportToXAO(self.projectile.part_doc, '/tmp/shaper_{}.xao'.format(section.faceID[j]), model.selection("FACE", "Revolution_{0}_{1}".format(i+1,j+1)), 'XAO')
                 
                 if j == 0:
@@ -72,7 +84,7 @@ class DomainGenerator:
         for i,section in enumerate(self.projectile.sections):
             revolutions_section = []
             for j in range(len(section.faceID)):
-                print("/tmp/shaper_{}.xao".format(section.faceID[j]))
+                
                 (imported, revolution, [], [], []) = self.geompy.ImportXAO("/tmp/shaper_{}.xao".format(section.faceID[j]))
                 self.geompy.addToStudy( revolution, 'Revolution_{0}_{1}'.format(i+1,j+1) )
 
@@ -106,9 +118,10 @@ class DomainGenerator:
 
                 self.geompy.addToStudyInFather( self.revolutionFacesGeom[i][j], group, section.faceID[j] )
                 
-        fuseGeom =self.geompy.MakeFuseList(self.projectileGroups, True, True)
-        self.projectileGeom =self.geompy.MakeSolid([fuseGeom])
-        self.geompy.addToStudy( fuseGeom, 'FuseProjectile' )
+        #fuseGeom =self.geompy.MakeFuseList(self.projectileGroups, True, True)
+        shellProjectile = self.geompy.MakeShell([item for sublist in self.revolutionFacesGeom for item in sublist])
+        self.projectileGeom =self.geompy.MakeSolid([shellProjectile])
+        self.geompy.addToStudy( shellProjectile, 'ShellProjectile' )
         self.geompy.addToStudy( self.projectileGeom, 'Projectile' )
 
 

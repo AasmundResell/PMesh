@@ -1,5 +1,14 @@
 
 
+from tkinter import Tk     # from tkinter import Tk for Python 3.x
+from tkinter.filedialog import askopenfilename
+
+
+#import tkinter as tk
+#from tkinter import ttk
+#from tkinter import filedialog as fd
+#from tkinter.messagebox import showinfo
+
 
 from Geometry.domain import DomainGenerator
 from Mesh.mesh import MeshGenerator
@@ -9,20 +18,47 @@ import salome
 import os 
 import yaml
 
-def salomeInit(salomeRun = True):
+def programInit():
+
+    salomeRun = True
+
+    if len(sys.argv) > 1:
+        salomeRun = str2bool(sys.argv[1])
+        
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+ 
+
+        filetypes = (
+            ('text files', '*.yml'),
+            ('All files', '*.*')
+        )
+
+        Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
+
+        filename = askopenfilename(
+            title='Open a config file',
+            initialdir=r'{}/Configurations'.format(dir_path),
+            filetypes=filetypes)
+
+        ymlFile = open(filename) 
+
+    else:
+        salomeRun = True
+        
+        ###Filename must be specified manually for salome run###
+        ymlFile = open("Configurations/Simple_Bullet.yml") 
+        dir_path = '/home/asmund/dev/PMesh'
+        
         
     salome.salome_init()
     import salome_notebook
     notebook = salome_notebook.NoteBook()
     
-    if salomeRun == True:
-        dir_path = '/home/asmund/dev/PMesh'
-    else:
-        dir_path = os.path.dirname(os.path.realpath(__file__))
+ 
     
     sys.path.insert(0, r'{}'.format(dir_path))
 
-    return notebook
+    return notebook, ymlFile, salomeRun
 
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
@@ -65,15 +101,8 @@ def str2bool(v):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) > 1:
-        salomeRun = str2bool(sys.argv[1])
-        print(salomeRun)
-    else:
-        salomeRun = True
         
-        
-    notebook = salomeInit(salomeRun)
-    ymlFile = open("Examples/SecantOgive_test.yml") 
+    notebook,ymlFile,salomeRun = programInit()
     
     parsedValues = yaml.load(ymlFile, Loader=yaml.FullLoader)
     SystemSettings = parsedValues['system']
@@ -84,19 +113,22 @@ if __name__ == "__main__":
 
     
 
-    geomDomain = DomainGenerator(**GeometryParams)
+    geomDomain = DomainGenerator(**SystemSettings,**GeometryParams)
 
     geomDomain.makeGeometry()
     
-    mesher = MeshGenerator(name,**MeshParams)
+    mesher = MeshGenerator(name,geomDomain,**MeshParams)
     if salomeRun:
-        Mesh = mesher.generateMesh(geomDomain)
+        Mesh = mesher.generateMesh()
     else:   
         question = "Do you want to generate the mesh? \n"
         if (query_yes_no(question)):
-            Mesh = mesher.generateMesh(geomDomain)
+            Mesh = mesher.generateMesh()
         else:
             quit()
+    
+    print("Exporting to SU2 ...")
+    name = "/home/asmund/dev/PMesh/{}".format(name)
     
     ExportSU2File(mesh=Mesh,file=name)
     

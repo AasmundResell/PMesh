@@ -9,16 +9,18 @@ from SketchAPI import *
 
 #Parent class for all projectile sections
 class Section:
-  def __init__(self, sectionNumber,**bodyParam ):
+  def __init__(self, sectionNumber,LengthConversion,**bodyParam ):
     
-    self.baseLength = bodyParam.get("bodyLength")
-    self.baseRadius = bodyParam.get("radiusBase")
+    self.LengthConversion = LengthConversion
+
+    self.baseLength = bodyParam.get("bodyLength")*self.LengthConversion
+    self.baseRadius = bodyParam.get("radiusBase")*self.LengthConversion
 
     
     if bodyParam.get("radiusFront"):
-      self.frontRadius = bodyParam["radiusFront"]
+      self.frontRadius = bodyParam["radiusFront"]*self.LengthConversion
     elif bodyParam.get("meplatRadius"):
-      self.frontRadius = bodyParam["meplatRadius"]
+      self.frontRadius = bodyParam["meplatRadius"]*self.LengthConversion
     else:
       self.frontRadius = None  
     
@@ -72,8 +74,8 @@ class Section:
       self.faceID.append("rear_{}".format(self.sectionNumber)) 
 
 class ConicNose(Section):    
-    def __init__(self,sectionNumber,**noseParam):
-      Section.__init__(self,sectionNumber,**noseParam)
+    def __init__(self,sectionNumber,LengthConversion,**noseParam):
+      Section.__init__(self,sectionNumber,LengthConversion,**noseParam)
       
       
       if self.frontRadius is None:
@@ -89,7 +91,7 @@ class ConicNose(Section):
 
     def calculateFrontRadius(self,**noseParam):      
       if noseParam.get("meplatCutLength"):
-        cutLenght = noseParam.get("meplatCutLength")
+        cutLenght = noseParam.get("meplatCutLength")*self.LengthConversion
         if noseParam.get("cutNoseBy") == "Absolute" or not noseParam.get("cutNoseBy"): #Absolute if not defined
           self.frontRadius = self.baseRadius/(self.baseLength + cutLenght)*cutLenght
         elif noseParam.get("meplatCutLength") and noseParam.get("cutNoseBy") == "Relative":
@@ -145,8 +147,8 @@ class ConicNose(Section):
     
 class TangenOgiveNose(Section):
     
-    def __init__(self,sectionNumber,**noseParams):
-      Section.__init__(self,sectionNumber,**noseParams)
+    def __init__(self,sectionNumber,LengthConversion,**noseParams):
+      Section.__init__(self,sectionNumber,LengthConversion,**noseParams)
       
       if noseParams.get("sphericallyBluntedNose"):
         self.sphericalBluntedNose = True
@@ -174,7 +176,7 @@ class TangenOgiveNose(Section):
       R = copy.deepcopy(self.baseRadius) #Base radius is unambiguously defined
 
       if noseParams.get("tangentOgiveRadius"):
-        self.rho = noseParams.get("tangentOgiveRadius")
+        self.rho = noseParams.get("tangentOgiveRadius")*self.LengthConversion
         L = calcTangentOgiveLength(self.rho,R) #If rho is defined, L is unambiguously defined
 
         #Any defined front radius is overriden when rho is specified
@@ -189,7 +191,7 @@ class TangenOgiveNose(Section):
         self.rho = calcTangentOgiveRadius(L ,R )
         
         if noseParams.get("meplatCutLength"):
-          l = noseParams.get("meplatCutLength")
+          l = noseParams.get("meplatCutLength")*self.LengthConversion
           self.frontRadius = calcTangentOgiveY(self.rho, R, L - l)
         elif self.frontRadius > 0.0:
           l = calcTangentOgiveX(self.rho, R, self.frontRadius)
@@ -201,7 +203,7 @@ class TangenOgiveNose(Section):
 
       
       if self.sphericalBluntedNose:
-        radius_sphere = noseParams.get("sphericallyBluntedNose").get("sphereRadius")
+        radius_sphere = noseParams.get("sphericallyBluntedNose").get("sphereRadius")*self.LengthConversion
         
         
         (self.point_center_x, _ , offset , _, self.point_tangent_x,self.point_tangent_y) = calcSphereBluntedOgiveNose(self.rho,R,radius_sphere)
@@ -294,8 +296,8 @@ class TangenOgiveNose(Section):
 
 class SecantOgiveNose(Section):
     
-    def __init__(self,sectionNumber,**noseParams):
-      Section.__init__(self,sectionNumber,**noseParams)
+    def __init__(self,sectionNumber,LengthConversion,**noseParams):
+      Section.__init__(self,sectionNumber,LengthConversion,**noseParams)
       
       if noseParams.get("sphericallyBluntedNose"):
         self.sphericalBluntedNose = True
@@ -314,15 +316,16 @@ class SecantOgiveNose(Section):
     
       
     def calculateGeometry(self,**noseParams): 
+      """
+      https://en.wikipedia.org/wiki/Nose_cone_design#Tangent_ogive for reference to variables info
+      """
 
       import copy
-
-      #See: https://en.wikipedia.org/wiki/Nose_cone_design#Tangent_ogive for reference to variables info
 
       R = copy.deepcopy(self.baseRadius) #Base radius is unambiguously defined
       L = copy.deepcopy(self.baseLength) #Base radius is unambiguously defined
       
-      self.rho = noseParams.get("secantOgiveRadius")
+      self.rho = noseParams.get("secantOgiveRadius")*self.LengthConversion
       
       #Calculate base tangent ogive parameters
       alpha = calcSecantOgiveAlpha(self.rho,R,L)
@@ -331,7 +334,7 @@ class SecantOgiveNose(Section):
         
         
       if noseParams.get("meplatCutLength"):
-        x = noseParams.get("meplatCutLength")
+        x = noseParams.get("meplatCutLength")*self.LengthConversion
         self.frontRadius = calcSecantOgiveY(self.rho, R, L, x )
       elif self.frontRadius is not None :
         if self.frontRadius > 0.0:
@@ -346,7 +349,7 @@ class SecantOgiveNose(Section):
 
       if self.sphericalBluntedNose:
 
-        radius_sphere = noseParams.get("sphericallyBluntedNose").get("sphereRadius")
+        radius_sphere = noseParams.get("sphericallyBluntedNose").get("sphereRadius")*self.LengthConversion
         (self.point_center_x, _ , offset , _, self.point_tangent_x,self.point_tangent_y) = calcSphereBluntedOgiveNose(
           self.rho, self.R_0, radius_sphere)
         
@@ -388,15 +391,11 @@ class SecantOgiveNose(Section):
         self.noseBluntArc = Sketch.addArc(self.point_center_x, 0, self.point_tangent_x, self.point_tangent_y, 0, 0, False)
         Sketch.setCoincident(self.noseBluntArc.endPoint(), self.baseAxialLine.result())
 
-        #Secant ogive nose arc
         self.noseOgiveArc = Sketch.addArc(self.L_0, self.R_0-self.rho, self.point_tangent_x,self.point_tangent_y, self.baseLength, self.baseRadius, True)
         
         Sketch.setCoincident(self.baseRadialLine.result(), self.noseOgiveArc.endPoint())
 
-        #Blunted tip arch
-        self.noseBluntArc = Sketch.addArc(self.point_center_x, 0, self.point_tangent_x, self.point_tangent_y, 0, 0, False)
-        Sketch.setCoincident(self.baseRadialLine.result(), self.noseOgiveArc.endPoint())
- 
+        
       else:
         
         self.noseOgiveArc = Sketch.addArc(self.L_0, self.R_0-self.rho, 0.0, self.frontRadius, self.baseLength, self.baseRadius, True)
@@ -440,13 +439,13 @@ class SecantOgiveNose(Section):
 
                
 class HorizontalSection(Section):    
-    def __init__(self,sectionNumber,**bodyParams):
+    def __init__(self,sectionNumber,LengthConversion,**bodyParams):
       
-      baseRadius = bodyParams.get("radiusRear")
+      baseRadius = bodyParams.get("radiusBase")*LengthConversion
 
       bodyParams["radiusFront"]=baseRadius
 
-      Section.__init__(self,sectionNumber,**bodyParams)
+      Section.__init__(self,sectionNumber,LengthConversion,**bodyParams)
 
 
       self.faceID = ["middle_{}".format(sectionNumber)]    
@@ -486,9 +485,9 @@ class HorizontalSection(Section):
 
 
 class LinearTransitionSection(Section):    
-    def __init__(self,sectionNumber,**bodyParams):
+    def __init__(self,sectionNumber,LengthConversion,**bodyParams):
   
-      Section.__init__(self,sectionNumber,**bodyParams)
+      Section.__init__(self,sectionNumber,LengthConversion,**bodyParams)
       
       self.faceID = ["middle_{}".format(sectionNumber)]    
       

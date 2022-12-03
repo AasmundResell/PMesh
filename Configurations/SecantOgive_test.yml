@@ -1,5 +1,6 @@
 system:
   name: SecantOgive_Test
+  unit: mm
 
 
 geometry:
@@ -36,4 +37,12 @@ geometry:
     radius: 200
 
 mesh:
-  inflationxLayers: True
+  inflationLayers: True
+  yPlussValue : 1
+  totalBLCells : 20
+  fineness : 3
+  physicalQuantities:
+    M : 1.0 
+    rho : 1.225 #kg/m³
+    mu : 18.5E-6 #
+    c : 343

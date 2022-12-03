@@ -1,0 +1,46 @@
+system:
+  name: SOCBT #Secant Ogive Cylindrical Boat Tail
+  unit: cal
+
+
+geometry:
+  projectile:
+    noseParams : 
+      bodyType: SecantOgiveNose
+      bodyLength: 3.017
+      radiusBase: 0.5
+      secantOgiveRadius : 18.88
+    bodyParams : 
+      section_1:        
+        bodyType: HorizontalSection
+        bodyLength: 2.0
+        radiusBase : 0.5
+      section_2:
+        bodyType: LinearTransitionSection
+        bodyLength: 0.983
+        radiusFront: 0.5
+        radiusBase: 0.379302777
+    finParams:
+      finType: SquareFins
+      axialStartPosition: 100
+      radialBasePosition: 20
+      thickness : 2
+      baseLength : 20
+      baseHeight : 10
+  domain:  
+    domain_method: manual #manual or automatic, automatic calculate domain size based on projectile size (and mach number eventually)
+    lengthFront: 120
+    lengthBack: 120
+    radius: 120
+
+
+mesh:
+  inflationLayers: True
+  yPlussValue : 1
+  totalBLCells : 20
+  fineness : 3
+  physicalQuantities:
+    M : 1.0 
+    rho : 1.225 #kg/m³
+    mu : 18.5E-6 #
+    c : 343
