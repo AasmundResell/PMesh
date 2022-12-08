@@ -12,7 +12,7 @@ from tkinter.filedialog import askopenfilename
 
 from Geometry.domain import DomainGenerator
 from Mesh.mesh import MeshGenerator
-from Mesh.SU2msh import ExportSU2File
+from CFDMSH import ExportSU2File
 import sys
 import salome
 import os 
@@ -37,7 +37,7 @@ def programInit():
 
         filename = askopenfilename(
             title='Open a config file',
-            initialdir=r'{}/Configurations'.format(dir_path),
+            initialdir=r'{}/../Configurations'.format(dir_path),
             filetypes=filetypes)
 
         ymlFile = open(filename) 

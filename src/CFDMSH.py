@@ -5,7 +5,7 @@
 
 Python Library for CFD Meshing with Salome Platform
 
-Author: Tougeron W. (www.tougeron-cfd.com)
+Author: 	Tougeron W. (www.tougeron-cfd.com)
 
 Licence: GNU General Public License
 
@@ -1752,7 +1752,7 @@ Conditions of use:
 	
 
 gdp = GetDotProduct
-
+	
 def GetTurnAngle( vector_1, vector_2, normal, unit = "rad" ):
 	"""
 	
@@ -17332,8 +17332,10 @@ esf = ExportSU2File
 
 #### - ####
 
-print("Welcome in cfdmsh!")
+if __name__ == "__main__":
+	
+	print("Welcome in cfdmsh!")
 
-pv()
+	pv()	
 
-print("Type pdf() to see implemented functions.")
+	print("Type pdf() to see implemented functions.")
