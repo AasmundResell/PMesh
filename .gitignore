@@ -1,3 +1,7 @@
+#ignore mesh files
+.su2
+.cgns
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
