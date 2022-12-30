@@ -17028,7 +17028,7 @@ Conditions of use:
 		edge_ids_in_mesh = mesh.GetElementsByType(SMESH.EDGE)
 		
 		nb_edges_in_mesh = mesh.NbEdges()
-		
+			
 		#-
 		
 		# Get faces IDs

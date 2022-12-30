@@ -46,7 +46,7 @@ def programInit():
         salomeRun = True
         
         ###Filename must be specified manually for salome run###
-        ymlFile = open("Configurations/Simple_Bullet.yml") 
+        ymlFile = open("../Configurations/M910_subsonic.yml") 
         dir_path = '/home/asmund/dev/PMesh'
         
         

@@ -3,6 +3,10 @@ from math import *
 def Re(U,L,rho,mu):
     return (U*L*rho)/mu
 
+def IdealGasLawAir(P,T):
+    R = 0.286 #kJ/kg/K, constant for air
+    return P/(R*T)
+
 def SkinFrictionCoeff(Re, method="schlichting"):
     """
     https://www.cfd-online.com/Wiki/Skin_friction_coefficient

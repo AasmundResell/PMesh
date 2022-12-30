@@ -1,0 +1,42 @@
+system:
+  name: M910_supersonic
+  unit: mm
+
+
+geometry:
+  projectile:
+    noseParams : #Types of noses: ConicNose, TangentOgiveNose
+      bodyType: ConicNose
+      cutNoseBy: Absolute #Absolute or Relative, Absolute by default
+      bodyLength: 41.2
+      radiusBase: 8.1
+      meplatRadius: 1.1 #Specify nose cut by "meplatRadius" or "meplatCutFromTip"
+    bodyParams : 
+      section_1:        
+        bodyType: HorizontalSection
+        bodyLength: 32.7
+        radiusBase: 8.1
+      section_2:
+        bodyType: LinearTransitionSection
+        bodyLength: 2.0
+        radiusBase: 6.1
+        radiusFront: 8.1
+  domain:  
+    domain_method: manual #manual or automatic, automatic calculate domain size based on projectile size (and mach number eventually)
+    domain_type: bullet_cylinder
+    lengthFront: 5.02
+    lengthBack: 85.9
+    radius: 56.8
+
+
+mesh:
+  inflationLayers: True
+  yPlussValue : 1
+  totalBLCells : 20
+  fineness : 3
+  physicalQuantities:
+    M : 1.0 
+    T : 288 #K
+    P : 101.325 #kPa
+    mu : 18.5E-6 #kg/m-s
+    c : 343 #m/s

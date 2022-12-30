@@ -49,7 +49,15 @@ class DomainGenerator:
         Function that calculates the size of the domain based on the size of the projectile
         and the specified mach number.
         """
-        a = "TEMP"
+        
+        #Front of the inner cylinder surrounding the projectile
+        front_innerDomain = -self.projectile.totalLength/4
+        
+        #End of the inner cylinder
+        back_innerDomain = self.projectile.totalLength*3
+
+        
+
 
     def importProjectileFromShaper(self):
         
@@ -102,7 +110,7 @@ class DomainGenerator:
 
         self.generateGeomProjectileFromFaces()
 
-        self.generateDomains()
+        self.generateDomainSimple()
 
     def generateGeomProjectileFromFaces(self):
 
@@ -118,36 +126,31 @@ class DomainGenerator:
 
                 self.geompy.addToStudyInFather( self.revolutionFacesGeom[i][j], group, section.faceID[j] )
                 
-        #fuseGeom =self.geompy.MakeFuseList(self.projectileGroups, True, True)
+        
         shellProjectile = self.geompy.MakeShell([item for sublist in self.revolutionFacesGeom for item in sublist])
         self.projectileGeom =self.geompy.MakeSolid([shellProjectile])
         self.geompy.addToStudy( shellProjectile, 'ShellProjectile' )
         self.geompy.addToStudy( self.projectileGeom, 'Projectile' )
 
 
-    def generateDomains(self):
+    def generateDomainSimple(self):
 
+        ### Define the outer domain ####
         totalDomainLength = self.FrontDomainLength + self.BackDomainLength + self.projectile.totalLength
-        startCylindeVertex = self.geompy.MakeVertex(-self.FrontDomainLength, 0, 0) #Point where the cylinder is extruded from
+        startOuterVertex = self.geompy.MakeVertex(-self.FrontDomainLength, 0, 0) #Point where the cylinder is extruded from
+        self.geompy.addToStudy( startOuterVertex, 'VertexCylinder' )
+
         unitVecX = self.geompy.MakeVectorDXDYDZ(1, 0, 0) #Negative direction of the projectile rocket
-        cylinderDomain = self.geompy.MakeCylinder(startCylindeVertex, unitVecX, self.domainRadius, totalDomainLength)
+        outerDomain = self.geompy.MakeCylinder(startOuterVertex, unitVecX, self.domainRadius, totalDomainLength)
+        outer_domainID = self.geompy.addToStudy( outerDomain, 'Outer_domain' )
 
-        self.domain = self.geompy.MakeCutList(cylinderDomain, [self.projectileGeom], True)
         
-        self.geompy.addToStudy( startCylindeVertex, 'VertexCylinder' )
-        cylinderID = self.geompy.addToStudy( cylinderDomain, 'Cylinder' )
-        self.geompy.addToStudy( self.domain, 'Domain' )
+        
+        self.domain = self.geompy.MakeCutList(outerDomain, [self.projectileGeom], True)
 
-        Farfield = self.geompy.CreateGroup(self.domain, self.geompy.ShapeType["FACE"])
-        self.geompy.UnionIDs(Farfield, [3, 10, 12])
-        Rocket_1 = self.geompy.CreateGroup(self.domain, self.geompy.ShapeType["FACE"])
-        self.geompy.UnionIDs(Rocket_1, [15, 22, 27, 32])
-        
-        [self.Farfield, self.Projectile] = self.geompy.GetExistingSubObjects(self.domain, False)
-        
-        self.geompy.addToStudyInFather( self.domain, self.Farfield, 'Farfield' )
-        self.geompy.addToStudyInFather( self.domain, self.Projectile, 'Projectile' )
-        
+        self.geompy.addToStudy( self.domain, 'domain' )
+    
+
         faceIDs = self.geompy.SubShapeAllIDs(self.domain, self.geompy.ShapeType["FACE"])
 
         self.domainFaces = 3
@@ -155,5 +158,77 @@ class DomainGenerator:
         self.domainIDs = faceIDs[0:self.domainFaces]
         self.projectileIDs = faceIDs[self.domainFaces:]
        
+    
+        self.Farfield = self.geompy.CreateGroup(self.domain, self.geompy.ShapeType["FACE"])
+        self.geompy.UnionIDs(self.Farfield, self.domainIDs)
+
+
+        self.Projectile = self.geompy.CreateGroup(self.domain, self.geompy.ShapeType["FACE"])
+        self.geompy.UnionIDs(self.Projectile, self.domainIDs)
+
+        self.geompy.addToStudyInFather( self.domain, self.Farfield, 'Farfield' )
+        self.geompy.addToStudyInFather( self.domain, self.Projectile, 'Projectile' )
+
+    def generateDomainInnerRefinement(self):
+
+        ### Define the outer domain ####
+        totalDomainLength = self.FrontDomainLength + self.BackDomainLength + self.projectile.totalLength
+        startOuterVertex = self.geompy.MakeVertex(-self.FrontDomainLength, 0, 0) #Point where the cylinder is extruded from
+        self.geompy.addToStudy( startOuterVertex, 'VertexCylinder' )
+
+        unitVecX = self.geompy.MakeVectorDXDYDZ(1, 0, 0) #Negative direction of the projectile rocket
+        outerDomain = self.geompy.MakeCylinder(startOuterVertex, unitVecX, self.domainRadius, totalDomainLength)
+        outer_domainID = self.geompy.addToStudy( outerDomain, 'Outer_domain' )
+
+        ### Define the inner domain, ie. the refinement zone surrounding the projectile ####
+        
+        #For now, the refinement zone extends 1/3 of the projectile length in the front
+        #startInnerVertex = self.geompy.MakeVertex(-self.projectile.totalLength/3, 0, 0) 
+        #unitVecX = self.geompy.MakeVectorDXDYDZ(1, 0, 0) #Negative direction of the projectile rocket
+
+        #Extends 1/2 behind the projectile
+        #innerCylinder = self.geompy.MakeCylinder(startInnerVertex, unitVecX, self.projectile.maxRadius*3, self.projectile.totalLength*(1/3+3/2))
+        #innerCylinderID = self.geompy.addToStudy( innerCylinder, 'innerCylinder' )
 
         
+        #self.innerDomain = self.geompy.MakeCutList(innerCylinder, [self.projectileGeom], True)
+
+        #self.geompy.addToStudyInFather( self.innerDomain, self.Farfield, 'Farfield' )
+        #self.geompy.addToStudyInFather( self.innerDomain, self.Projectile, 'Projectile' )
+        
+        #self.geompy.addToStudy( self.innerDomain, 'innerDomain' )
+
+        self.domain = self.geompy.MakeCutList(outerDomain, [self.projectileGeom], True)
+
+        self.geompy.addToStudy( self.domain, 'domain' )
+        
+
+
+        ###Generate domain ###
+        #Vector_z = self.geompy.MakeVectorDXDYDZ(0, 0, 1)
+        #origo = self.geompy.MakeVertex(0, 0, 0) #Point where the cylinder is extruded from
+        #symmetricCutPlane = self.geompy.MakePlane(origo, Vector_z, 2000)
+
+        #Partition_1 = self.geompy.MakePartitionNonSelfIntersectedShape([outerDomain, self.innerDomain], [symmetricCutPlane], [], [], self.geompy.ShapeType["SOLID"], 0, [], 1, True)
+
+        
+
+        faceIDs = self.geompy.SubShapeAllIDs(self.domain, self.geompy.ShapeType["FACE"])
+
+        self.domainFaces = 3
+        
+        self.domainIDs = faceIDs[0:self.domainFaces]
+        self.projectileIDs = faceIDs[self.domainFaces:]
+       
+        #[self.Farfield, self.Projectile] = self.geompy.GetExistingSubObjects(self.domain, False)
+
+        self.Farfield = self.geompy.CreateGroup(self.domain, self.geompy.ShapeType["FACE"])
+        self.geompy.UnionIDs(self.Farfield, self.domainIDs)
+
+
+        self.Projectile = self.geompy.CreateGroup(self.domain, self.geompy.ShapeType["FACE"])
+        self.geompy.UnionIDs(self.Projectile, self.domainIDs)
+
+        self.geompy.addToStudyInFather( self.domain, self.Farfield, 'Farfield' )
+        self.geompy.addToStudyInFather( self.domain, self.Projectile, 'Projectile' )
+  

@@ -6,25 +6,38 @@ class MeshGenerator():
 
     def __init__(self,name,geomDomain,**meshParams):
         self.smesh = smeshBuilder.New()
+        self.name = name
 
         self.geomDomain = geomDomain
         self.meshParams = meshParams
         
+        self.defineSurfaceSizing()
 
+        self.yInit = None
         self.readMeshCommands()
 
-        self.definePhysicalQuantities()
-        self.defineVolumeAlgorithm()
-
-        self.name = name
+        if self.inflationLayers:
+            if self.yInit is None:
+                self.readPhysicalQuantities()
+            
+            
+            self.totalBLHeight = BLThicknessFromCellHeight(self.yInit,self.numBLcells,self.growthRate)
+            print("The boundary layer has a total thickness of: {} mm".format(self.totalBLHeight))
+                
 
     def readMeshCommands(self):
 
         self.inflationLayers = self.meshParams.get("inflationLayers")
 
         if self.inflationLayers:
-            
-            self.yPlusTarget = self.meshParams.get("yPlussValue")
+
+            if self.meshParams.get("yPlussValue"):
+                self.yPlusTarget = self.meshParams.get("yPlussValue")
+            elif self.meshParams.get("yInit"):
+                self.yInit = self.meshParams.get("yInit")
+            else:
+                RuntimeError("yPlussValue or yInit must be specified")  
+                
 
             if self.meshParams.get("growthRate"):
                 self.growthRate = self.meshParams.get("growth_rate")
@@ -53,7 +66,7 @@ class MeshGenerator():
         
         
 
-    def definePhysicalQuantities(self):
+    def readPhysicalQuantities(self):
 
         if "physicalQuantities" in self.meshParams:
             values = {k.lower():v for k,v in self.meshParams["physicalQuantities"].items()} #make keys case insensitive
@@ -76,6 +89,8 @@ class MeshGenerator():
 
             if values.get("rho"):
                 self.rho = values.get("rho")
+            elif values.get("t") and values.get("p"):
+                self.rho = IdealGasLawAir(values.get("t"),values.get("p"))
             else: 
                 self.rho = 1.225 
                 Warning("Standard atmospheric conditions is used for the air density")
@@ -86,26 +101,41 @@ class MeshGenerator():
                 self.mu = 1.8*10**(-5) 
                 Warning("Standard atmospheric conditions is used for the air dynamic viscosity")
 
-            self.L = self.geomDomain.projectile.totalLength/1000 #Converted to standard SI units
-            print("Total length of the projectile: {} mm".format(self.L*1000))
-
+            
             self.Re_L = Re(self.U,self.L,self.rho,self.mu)
             self.BL_thickness_experimental = BLThicknessFromTheory(self.Re_L,self.L)*1000    
 
             if self.inflationLayers:
                 
-                y_init = YPlus(self.yPlusTarget, self.U, self.L, self.rho, self.mu, skinFrictionMethod="Schlichting")
-                self.totalBLHeight = BLThicknessFromCellHeight(y_init,self.numBLcells,self.growthRate)*1000
+                self.yInit = YPlus(self.yPlusTarget, self.U, self.L, self.rho, self.mu, skinFrictionMethod="Schlichting")
+                print("Initial inflation layer has a thickness of: ",self.yInit*1000)
+                
 
         else:
             RuntimeError("Physical quantities must be specified for the mesh to be generated!")
 
-    def defineVolumeAlgorithm(self):
+    def defineSurfaceSizing(self):
         """
-        Defines the algorithms for the volume mesh
+        Defines the sizing on the projectile surfaces
         """
-        #TODO
+        self.L = self.geomDomain.projectile.totalLength/1000 #Converted to standard SI units
+        print("Total length of the projectile: {} mm".format(self.L*1000))
         
+
+        baseLengths = []
+
+        for section in self.geomDomain.projectile.sections:
+            axialLength = section.baseLength
+
+            frontRadius = section.frontRadius
+            baseRadius = section.baseRadius
+
+            hypothenus = (axialLength**2 + (baseRadius-frontRadius)**2)**(1/20)
+
+            
+       
+
+
         return None
     
 
@@ -120,13 +150,14 @@ class MeshGenerator():
 
     def generateMeshWithBL(self):    
         
+        print("Generating mesh with inflation layers")
         
         self.mesh = self.smesh.Mesh(self.geomDomain.domain,self.name)
         
         NETGEN_1D_2D_3D = self.mesh.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D)
         NETGEN_3D_Parameters_1 = NETGEN_1D_2D_3D.Parameters()
-        NETGEN_3D_Parameters_1.SetMaxSize( 73.9243 )
-        NETGEN_3D_Parameters_1.SetMinSize( 0.265181 )
+        NETGEN_3D_Parameters_1.SetMaxSize( 75 )
+        NETGEN_3D_Parameters_1.SetMinSize( 0.02 )
         NETGEN_3D_Parameters_1.SetSecondOrder( 0 )
         NETGEN_3D_Parameters_1.SetOptimize( 1 )
         NETGEN_3D_Parameters_1.SetFineness( self.fineness )
@@ -137,7 +168,7 @@ class MeshGenerator():
         NETGEN_3D_Parameters_1.SetQuadAllowed( 0 )
         NETGEN_3D_Parameters_1.UnsetLocalSizeOnEntry("Projectile_1")
         for pface in self.geomDomain.projectileGroups:
-            NETGEN_3D_Parameters_1.SetLocalSizeOnShape(pface, 4)
+            NETGEN_3D_Parameters_1.SetLocalSizeOnShape(pface, 1)
        
         NETGEN_3D_Parameters_1.UnsetLocalSizeOnEntry("Projectile_1")
         Farfield_1 = self.mesh.GroupOnGeom(self.geomDomain.Farfield,'Farfield',SMESH.FACE)

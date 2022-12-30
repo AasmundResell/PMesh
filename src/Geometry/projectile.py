@@ -48,7 +48,7 @@ class ProjectileModel:
         model.do()
         self.revoluteSections()
 
-        
+        self.calculateSizingParams()
        
     def createNose(self,**noseParam):
 
@@ -64,7 +64,8 @@ class ProjectileModel:
         
         self.sections.insert(0,nose)
         self.sections[0].addSketchLines(self.sideProfileSketch,axialStartPoint=0.0)
-        self.totalLength = self.totalLength + self.sections[0].baseLength
+        
+        
 
     def createBodies(self,**bodyParamList):
 
@@ -88,10 +89,18 @@ class ProjectileModel:
             self.sections[i].addSketchLines(self.sideProfileSketch,currentAxialLength)
 
             currentAxialLength = currentAxialLength + self.sections[i].baseLength
-            self.totalLength = self.totalLength + self.sections[i].baseLength
+            
+            
+        
+    def calculateSizingParams(self):
 
-        
-        
+        self.totalLength = 0.0
+        self.maxRadius = 0.0
+        for section in self.sections:
+                 self.totalLength = self.totalLength + section.baseLength
+
+                 self.maxRadius = max(self.maxRadius,section.baseRadius)
+
 
     def connectSections(self):
         """

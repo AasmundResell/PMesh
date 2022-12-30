@@ -40,7 +40,7 @@ mesh:
   inflationLayers: True
   yPlussValue : 1
   totalBLCells : 20
-  fineness : 3
+  fineness : 4 #0-4 in finess, 5 - custom
   physicalQuantities:
     M : 1.0 
     rho : 1.225 #kg/m³
