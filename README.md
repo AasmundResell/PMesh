@@ -11,7 +11,7 @@ Salome installation procedure: (shady and should be improved)
 
 1: go to https://www.salome-platform.org/?page_id=15 and download the installation files for you linux didtribution. 
 2: unzip the files in a random directory which we label $SALOME_INSATLL_DIR
-3: add the following lines to ~/.bashrc:
+3: add the following lines to ~/.bashrc: (modify according to the salome version you are using)
 
 export SALOME_INSTALL_DIR=~/dev/SALOME-9.9.0-native-UB22.04-SRC
 source $SALOME_INSTALL_DIR/env_launch.sh
