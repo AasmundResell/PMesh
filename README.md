@@ -18,4 +18,4 @@ source $SALOME_INSTALL_DIR/env_launch.sh
 alias salome="$SALOME_INSTALL_DIR/salome"
 ```
 4: some dependencies are needed. The script: "" can be used to install many of them
-5: If everything went according to plan, salome can now be run simply typing "salome" in a terminal.
+5: If everything went according to plan, salome can now be run simply typing ```salome``` in a terminal.
