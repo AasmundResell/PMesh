@@ -7,7 +7,7 @@ Projectile Meshing
 Tkinter
 salome
 
-Salome installation procedure: (Ahady and should be improved)
+Salome installation procedure: (shady and should be improved)
 
 1: go to https://www.salome-platform.org/?page_id=15 and download the installation files for you linux didtribution. 
 2: unzip the files in a random directory which we label $SALOME_INSATLL_DIR
