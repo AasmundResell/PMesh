@@ -27,7 +27,7 @@ type
 ```
 sat/sat config SALOME-9.9.0-native --check_system
 ```
-to see which dependencies you are missing. In my case I had to pip install sat and edit the top of the file sat/sat from "python" to "python3". 
+to see which dependencies you are missing. In my case I had to "pip install sat" and edit the top of the file sat/sat from "python" to "python3". 
 The script: salome_dependencies.sh located in the root folder of PMesh can be used to install some of them, unless it has depreciated. 
 
 6: If everything went according to plan, salome can now be run simply typing ```salome``` in a terminal.
